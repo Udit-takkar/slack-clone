@@ -4,13 +4,24 @@ import { Avatar } from "@material-ui/core";
 import AccessTimeIcon from "@material-ui/icons/AccessTime";
 import SearchIcon from "@material-ui/icons/Search";
 import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth, db } from "../Firebase";
+import { useCollection, useDocument } from "react-firebase-hooks/firestore";
+import { selectRoomId } from "../features/appSlice";
+import { useSelector } from "react-redux";
 
 function Header() {
+  const [user] = useAuthState(auth);
+
   return (
     <>
       <HeaderContainer>
         <HeaderLeft>
-          <HeaderAvatar />
+          <HeaderAvatar
+            style={{ cursor: "pointer" }}
+            onClick={() => auth.signOut()}
+            src={user?.photoURL}
+          />
           <AccessTimeIcon style={{ color: "white", marginRight: "10px" }} />
         </HeaderLeft>
         <HeaderSearch>
@@ -32,6 +43,10 @@ const HeaderContainer = styled.div`
   display: flex;
   background-color: #3f0f40;
   align-items: center;
+  position: sticky;
+  position: -webkit-sticky;
+  z-index: 1;
+  top: 0; /* required */
 `;
 
 const HeaderLeft = styled.div`
@@ -63,6 +78,7 @@ const HeaderSearch = styled.div`
     margin-left: auto;
     margin-right: auto;
     color: white;
+    width: 100%;
   }
 `;
 

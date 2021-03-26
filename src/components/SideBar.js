@@ -14,17 +14,26 @@ import InboxIcon from "@material-ui/icons/Inbox";
 import AddIcon from "@material-ui/icons/Add";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "../Firebase";
+import { auth } from "../Firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { useState } from "react";
 
 function SideBar() {
   const [channel, loading, error] = useCollection(db.collection("rooms"));
+  const [user] = useAuthState(auth);
+  const [showChannels, setshowChannels] = useState(true);
 
+  const toggleChannels = () => {
+    setshowChannels(!showChannels);
+  };
+  console.log(showChannels);
   return (
     <SideBarContainer>
       <SideBarHeading>
         <h2>Slack Name</h2>
         <h3>
-          <FiberManualRecordIcon />
-          Udit Takkar
+          <FiberManualRecordIcon style={{ color: "green" }} />
+          {user?.displayName}
         </h3>
       </SideBarHeading>
       <SidebarOption Icon={InsertCommentIcon} title="Threads" />
@@ -36,14 +45,21 @@ function SideBar() {
       <SidebarOption Icon={FileCopyIcon} title="File browser" />
       <SidebarOption Icon={ExpandLessIcon} title="Show less" />
       <hr />
-      <SidebarOption Icon={ExpandMoreIcon} title="Channels" />
+      <SidebarOption
+        toggleChannels={toggleChannels}
+        Icon={showChannels ? ExpandLessIcon : ExpandMoreIcon}
+        title="Channels"
+      />
       <hr />
       <SidebarOption Icon={AddIcon} addChannelOption title="Add Channel" />
-      {channel?.docs.map((doc) => {
-        return (
-          <SidebarOption key={doc.id} id={doc.id} title={doc.data().name} />
-        );
-      })}
+      <div style={{ transition: "all 3s ease-in-out" }}>
+        {showChannels &&
+          channel?.docs.map((doc) => {
+            return (
+              <SidebarOption key={doc.id} id={doc.id} title={doc.data().name} />
+            );
+          })}
+      </div>
     </SideBarContainer>
   );
 }
@@ -55,9 +71,12 @@ const SideBarContainer = styled.div`
   flex: 0.25;
   background-color: #3f0f40;
   color: white;
+
+  /* overflow-y: hidden; */
   border-top: 1px solid gray;
   flex-direction: column;
-  max-width: 260px;
+  /* overflow-x: hidden; */
+  /* max-width: 260px; */
   > hr {
     width: 100%;
   }
@@ -71,7 +90,6 @@ const SideBarHeading = styled.div`
   > h3 {
     display: flex;
     color: white;
-
     margin-top: 5px;
     font-size: 15px;
     font-weight: lighter;

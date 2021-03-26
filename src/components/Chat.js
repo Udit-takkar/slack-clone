@@ -6,26 +6,70 @@ import Header from "./Header";
 import { selectRoomId } from "../features/appSlice";
 import { useSelector } from "react-redux";
 import ChatInput from "./ChatInput";
+import { useCollection, useDocument } from "react-firebase-hooks/firestore";
+import { db } from "../Firebase";
+import Messages from "./Messages";
+import { useRef, useEffect } from "react";
+import Welcome from "./Welcome";
 
 function Chat() {
   const roomId = useSelector(selectRoomId);
-  //   const [messages];
-  //   const [roomDetails];
+  const chatRef = useRef(null);
+  const [roomDetails] = useDocument(
+    roomId && db.collection("rooms").doc(roomId)
+  );
+  const [roomMessages, loading] = useCollection(
+    roomId &&
+      db
+        .collection("rooms")
+        .doc(roomId)
+        .collection("messages")
+        .orderBy("timestamp", "asc")
+  );
+
+  useEffect(() => {
+    chatRef?.current?.scrollIntoView();
+  }, [roomId, loading]);
 
   return (
     <ChatContainer>
-      <ChatHeader>
-        <HeaderLeft>
-          <h4>#Room-Name</h4>
-          <StarBorderOutlinedIcon />
-        </HeaderLeft>
-        <HeaderRight>
-          <InfoOutlinedIcon />
-          <h4>Details</h4>
-        </HeaderRight>
-      </ChatHeader>
-      <ChatMessages></ChatMessages>
-      <ChatInput channelId={roomId} />
+      {roomDetails && roomMessages ? (
+        <>
+          <ChatHeader>
+            <HeaderLeft>
+              <h4>#{roomDetails?.data().name}</h4>
+              <StarBorderOutlinedIcon />
+            </HeaderLeft>
+            <HeaderRight>
+              <InfoOutlinedIcon />
+              <h4>Details</h4>
+            </HeaderRight>
+          </ChatHeader>
+          <ChatMessages>
+            {roomMessages?.docs.map((doc) => {
+              const { message, timestamp, user, userImage } = doc.data();
+
+              return (
+                <Messages
+                  key={doc.id}
+                  message={message}
+                  timestamp={timestamp}
+                  user={user}
+                  userImage={userImage}
+                />
+              );
+            })}
+          </ChatMessages>
+          <ChatBottom ref={chatRef} />
+          <ChatInput
+            chatRef={chatRef}
+            channelName={roomDetails?.data().name}
+            channelId={roomId}
+          />
+        </>
+      ) : (
+        <Welcome />
+      )}
     </ChatContainer>
   );
 }
@@ -33,7 +77,7 @@ function Chat() {
 export default Chat;
 
 const ChatContainer = styled.div`
-  flex: 0.7;
+  flex: 0.75;
   max-width: calc(0.7+250px);
   overflow-y: scroll;
 `;
@@ -55,3 +99,7 @@ const HeaderRight = styled.div`
 `;
 
 const ChatMessages = styled.div``;
+
+const ChatBottom = styled.div`
+  padding: 200px;
+`;

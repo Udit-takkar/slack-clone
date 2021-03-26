@@ -5,7 +5,7 @@ import { db } from "../Firebase";
 import { useDispatch } from "react-redux";
 import { selectId } from "../features/appSlice";
 
-function SidebarOption({ Icon, title, addChannelOption, id }) {
+function SidebarOption({ Icon, title, addChannelOption, id, toggleChannels }) {
   const dispatch = useDispatch();
 
   const addChannel = () => {
@@ -28,11 +28,21 @@ function SidebarOption({ Icon, title, addChannelOption, id }) {
 
   return (
     <SidebarOptionContainer
-      onClick={addChannelOption ? addChannel : selectChannel}
+      onClick={
+        addChannelOption
+          ? addChannel
+          : toggleChannels
+          ? () => toggleChannels()
+          : selectChannel
+      }
     >
-      {Icon && <Icon />}
+      {Icon && (
+        <Icon onClick={toggleChannels ? () => toggleChannels() : null} />
+      )}
       {Icon ? (
-        <h1>{title}</h1>
+        <h1 onClick={toggleChannels ? () => toggleChannels() : null}>
+          {title}
+        </h1>
       ) : (
         <h1>
           <span>#</span>
